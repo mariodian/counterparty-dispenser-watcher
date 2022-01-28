@@ -1,6 +1,8 @@
 # counterparty-dispenser-watcher
 Monitoring changes in Counterparty dispensers.
 
+Dependency: jq
+
 ## How to set up
 - Edit `.env.local` according to your needs.
 - Add Counterparty asseet names to `assets.txt`. Each asset goes on new new.
