@@ -1,5 +1,7 @@
 #! /bin/bash
 
+export $(cat .env | sed 's/#.*//g' | xargs)
+
 # Load our config file
 if [ -f .env.local ]
 then
