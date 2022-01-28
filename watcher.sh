@@ -52,7 +52,7 @@ do
 
   # Read existing data about assets
   touch -a $DATA_FILE
-  IFS="," read -ra A <<< "$(grep $ASSET $DATA_FILE | tr '\n' '\0')"
+  IFS="," read -ra A <<< "$(grep $ASSET $DATA_FILE)"
   CSV_ASSET=${A[0]}
   CSV_BLOCK=${A[1]}
 
