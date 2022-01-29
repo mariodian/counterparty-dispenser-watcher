@@ -16,7 +16,7 @@ SLEEP_TIME="1" # Do NOT set to 0! This is to prevent DoSing Counterparty servers
 
 notification() {
   SUBJECT="New Dispenser"
-  MESSAGE="New dispenser for $ASSET is available."
+  MESSAGE="New dispenser for $ASSET is available @ $SAT_RATE sat/$GIVE_QUANTITY."
 
   if [[ "$NOTIFICATION" = "pushover" ]]; then
     echo "Sending a notification through Pushover."
@@ -51,6 +51,8 @@ do
   sleep $SLEEP_TIME
 
   LAST_BLOCK=$(echo $JSON | jq '.data[0] | .block_index')
+  SAT_RATE=$(echo $JSON | jq -r '.data[0] | .satoshirate')
+  GIVE_QUANTITY=$(echo $JSON | jq -r '.data[0] | .give_quantity')
 
   # Read existing data about assets
   touch -a $DATA_FILE
