@@ -13,7 +13,7 @@ API_ENDPOINT="https://xchain.io/api"
 API_DISPENSER="$API_ENDPOINT/dispensers"
 IFS=$'\n' read -d '' -r -a ASSETS < ./assets.txt
 DATA_FILE="./data.csv"
-SLEEP_TIME="1" # Do NOT set to 0! This is to prevent DoSing Counterparty servers
+SLEEP_TIME=$(( ( RANDOM % 2 )  + 1 )) # Do NOT set to 0! This is to prevent DoSing Counterparty servers
 SUBJECT="New Dispenser(s)"
 MESSAGE=""
 
