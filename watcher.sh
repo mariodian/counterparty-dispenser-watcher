@@ -14,11 +14,10 @@ API_DISPENSER="$API_ENDPOINT/dispensers"
 IFS=$'\n' read -d '' -r -a ASSETS < ./assets.txt
 DATA_FILE="./data.csv"
 SLEEP_TIME="1" # Do NOT set to 0! This is to prevent DoSing Counterparty servers
+SUBJECT="New Dispenser(s)"
+MESSAGE=""
 
-notification() {
-  SUBJECT="New Dispenser"
-  MESSAGE="New dispenser for $ASSET is available @ $SAT_RATE sat/$GIVE_QUANTITY."
-
+send_notification() {
   if [[ "$NOTIFICATION" = "pushover" ]]; then
     echo "Sending a notification through Pushover."
 
@@ -43,6 +42,11 @@ notification() {
   fi
 }
 
+prepare_notification () {
+  NL=$'\n'
+  MESSAGE+="New dispenser for <a href=\"https://xchain.io/tx/$TX_HASH\">$ASSET</a> is available @ $SAT_RATE sat/$GIVE_QUANTITY. <br>"
+}
+
 for ASSET in "${ASSETS[@]}"
 do
   echo "Retrieving data for $ASSET..."
@@ -54,6 +58,7 @@ do
   LAST_BLOCK=$(echo $JSON | jq '.data[0] | .block_index')
   SAT_RATE=$(echo $JSON | jq -r '.data[0] | .satoshirate')
   GIVE_QUANTITY=$(echo $JSON | jq -r '.data[0] | .give_quantity')
+  TX_HASH=$(echo $JSON | jq -r '.data[0] | .tx_hash')
 
   # Read existing data about assets
   touch -a $DATA_FILE
@@ -65,15 +70,20 @@ do
   if [ -z "$CSV_ASSET" ]; then
     echo "Saving $ASSET data."
     echo "$ASSET,$LAST_BLOCK" >> $DATA_FILE
-    notification
+    prepare_notification
   else
     # Update with new data
     if [ $LAST_BLOCK -gt $CSV_BLOCK ]; then
       echo "Updating $ASSET on block $LAST_BLOCK."
       awk 'BEGIN{FS=OFS=","} $1=="'$ASSET'"{$2="'$LAST_BLOCK'"} 1' $DATA_FILE > tmp && mv tmp $DATA_FILE
-      notification
+      prepare_notification
     else 
       echo "No new changes available."
     fi
   fi
 done
+
+# Send notification
+if [ -n "$MESSAGE" ]; then
+  send_notification
+fi
