@@ -55,31 +55,36 @@ do
   # Adding a bit of sleep to prevent DoSing counterparty servers
   sleep $SLEEP_TIME
 
-  LAST_BLOCK=$(echo $JSON | jq '.data[0] | .block_index')
-  SAT_RATE=$(echo $JSON | jq -r '.data[0] | .satoshirate')
-  GIVE_QUANTITY=$(echo $JSON | jq -r '.data[0] | .give_quantity')
-  TX_HASH=$(echo $JSON | jq -r '.data[0] | .tx_hash')
+  # Process data if any available
+  if [[ $(echo $JSON | jq -r '.total') > 0 ]]; then
+    LAST_BLOCK=$(echo $JSON | jq '.data[0] | .block_index')
+    SAT_RATE=$(echo $JSON | jq -r '.data[0] | .satoshirate')
+    GIVE_QUANTITY=$(echo $JSON | jq -r '.data[0] | .give_quantity')
+    TX_HASH=$(echo $JSON | jq -r '.data[0] | .tx_hash')
 
-  # Read existing data about assets
-  touch -a $DATA_FILE
-  IFS="," read -ra A <<< "$(grep $ASSET $DATA_FILE)"
-  CSV_ASSET=${A[0]}
-  CSV_BLOCK=${A[1]}
+    # Read existing data about assets
+    touch -a $DATA_FILE
+    IFS="," read -ra A <<< "$(grep $ASSET $DATA_FILE)"
+    CSV_ASSET=${A[0]}
+    CSV_BLOCK=${A[1]}
 
-  # There's currently no data so we saved the fetched one
-  if [ -z "$CSV_ASSET" ]; then
-    echo "Saving $ASSET data."
-    echo "$ASSET,$LAST_BLOCK" >> $DATA_FILE
-    prepare_notification
-  else
-    # Update with new data
-    if [ $LAST_BLOCK -gt $CSV_BLOCK ]; then
-      echo "Updating $ASSET on block $LAST_BLOCK."
-      awk 'BEGIN{FS=OFS=","} $1=="'$ASSET'"{$2="'$LAST_BLOCK'"} 1' $DATA_FILE > tmp && mv tmp $DATA_FILE
+    # There's currently no data so we saved the fetched one
+    if [ -z "$CSV_ASSET" ]; then
+      echo "Saving $ASSET data."
+      echo "$ASSET,$LAST_BLOCK" >> $DATA_FILE
       prepare_notification
-    else 
-      echo "No new changes available."
+    else
+      # Update with new data
+      if [ $LAST_BLOCK -gt $CSV_BLOCK ]; then
+        echo "Updating $ASSET on block $LAST_BLOCK."
+        awk 'BEGIN{FS=OFS=","} $1=="'$ASSET'"{$2="'$LAST_BLOCK'"} 1' $DATA_FILE > tmp && mv tmp $DATA_FILE
+        prepare_notification
+      else 
+        echo "No new changes available."
+      fi
     fi
+  else
+    echo "No dispensers available."
   fi
 done
 
