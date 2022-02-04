@@ -1,5 +1,6 @@
 #! /bin/bash
 
+cd "$(dirname "$0")"
 export $(cat .env | sed 's/#.*//g' | xargs)
 
 # Load our config file
